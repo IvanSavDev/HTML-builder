@@ -1,37 +1,37 @@
 const fs = require('fs');
 const path = require('path');
-const { exit, stdin, stdout } = process;
+const readline = require('readline');
+const { stdin: input, stdout: output } = process;
 const pathNewFile = path.join(__dirname, 'newFile.txt');
 
-stdout.write('Hello, enter your text here\n');
+const rl = readline.createInterface({ output, input });
 
 fs.writeFile(pathNewFile, '', (err) => {
   if (err) throw err;
 });
 
-stdin.on('data', (data) => {
-  if (data.toString().split('\n').join('') === 'exit') {
-    exit();
-  }
-
-  fs.appendFile(pathNewFile, data, (error) => {
-    if (error) {
-      stdout.write(`Oops, can\`t append file: ${error}`);
-    }
-  });
-});
-
-process.on('exit', (code) => {
-  if (code === 0) {
-    stdout.write('Good bye\n');
+const appendToFile = (text) => {
+  if (text === 'exit') {
+    rl.close();
   } else {
-    stdout.write(`Something went wrong and the program ended with the code: ${code}\n`);
+    fs.appendFile(pathNewFile, `${text}\n`, (err) => {
+      if (err) console.log(err);
+    });
   }
+};
+
+rl.question('Hello, enter your text here:\n', (answer) => {
+  appendToFile(answer);
 });
 
-process.on('SIGINT', (signal) => {
-  if (signal === 'SIGINT') {
-    stdout.write('\n');
-    exit();
-  }
+rl.on('line', (str) => {
+  appendToFile(str);
+});
+
+rl.on('SIGINT', () => {
+  rl.close();
+});
+
+rl.on('close', () => {
+  console.log('Good bye');
 });
